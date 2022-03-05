@@ -1,9 +1,12 @@
-import useSWR from "swr";
-import { SonarrTitle } from "../types";
-import TitleCard from "../components/TitleCard";
-import MTHeader from "../components/MTHeader";
+//import useSWR from "swr";
+import { SonarrTitle, TVMazeShow } from "../types";
+//import TitleCard from "../components/TitleCard";
+import MiniCardContainer from "../components/MiniCardContainer";
+import Layout from "../components/Layout";
+import { ReactElement } from "react";
+import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 
-const FollowedShows = () => {
+/* const FollowedShows = () => {
   const ids = [289590, 281662, 270915, 338186, 368643]; //example followed shows(tvdbIds)
   const { data, error } = useSWR([ids], getShows, { revalidateOnFocus: false });
 
@@ -11,13 +14,10 @@ const FollowedShows = () => {
   if (!data) return <div>Loading...</div>;
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 justify-left gap-4 content-center">
-      <MTHeader />
-      <div className="flex flex-wrap gap-4">
-        {data.map((Title: SonarrTitle) => (
-          <TitleCard key={Title.tvdbId} show={Title} />
-        ))}
-      </div>
+    <div className="flex flex-wrap gap-4">
+      {data.map((Title: SonarrTitle) => (
+        <TitleCard key={Title.tvdbId} show={Title} />
+      ))}
     </div>
   );
 };
@@ -32,6 +32,27 @@ async function getShows(ids: Array<number>) {
       return titleArr[0];
     })
   );
-}
+} */
+
+const FollowedShows = ({
+  data,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  return <MiniCardContainer shows={data} />;
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const ids = [
+    289590, 281662, 270915, 338186, 368643, 371980, 391153, 329089, 366924,
+    279536, 368166,
+  ]; //example followed shows(tvdbIds)
+  const titles: Array<TVMazeShow> = await Promise.all(
+    ids.map((id) => fetch(`https://api.tvmaze.com/lookup/shows?thetvdb=${id}`))
+  ).then((shows) => Promise.all(shows.map((show) => show.json())));
+  return { props: { data: titles } };
+};
+
+FollowedShows.getLayout = function getLayout(page: ReactElement) {
+  return <Layout>{page}</Layout>;
+};
 
 export default FollowedShows;
