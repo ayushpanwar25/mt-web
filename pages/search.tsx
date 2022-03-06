@@ -1,11 +1,15 @@
 import useSWR, { useSWRConfig } from "swr";
-import { SonarrTitle, ITraktSearch, ITraktTitle } from "../types";
-import TitleCard from "../components/TitleCard";
-import MTHeader from "../components/MTHeader";
+import {
+  SonarrTitle,
+  ITraktSearch,
+  ITraktTitle,
+  TVMazeShow,
+  ITraktWrapper,
+} from "../types";
 import { debounce, memoize } from "lodash";
-import Trakt from "trakt.tv";
 import { useState } from "react";
 import Layout from "../components/Layout";
+import CardContainer from "../components/CardContainer";
 
 type Props = {
   PassedQuery?: string;
@@ -24,7 +28,7 @@ const Search = ({ PassedQuery = "" }: Props) => {
   }, 500);
 
   return (
-    <div>
+    <div className="pt-24">
       <div className="form-control">
         <input
           type="text"
@@ -41,32 +45,33 @@ const Search = ({ PassedQuery = "" }: Props) => {
             <div>Loading...</div>
           )
         ) : (
-          <div className="flex flex-wrap gap-4">
-            {data.map((Title: SonarrTitle) => (
-              <TitleCard key={Title.tvdbId} show={Title} />
-            ))}
-          </div>
+          <CardContainer shows={data} />
         )
-      ) : (
-        <div>Start typing retard</div>
-      )}
+      ) : null}
     </div>
   );
 };
 
-/* const trakt = new Trakt({
-  client_id: process.env.TRAKT_CLIENT_ID,
-  client_secret: process.env.TRAKT_CLIENT_SECRET,
-  redirect_uri: null,
-  api_url: "https://api.trakt.tv",
-  useragent: null,
-  pagination: true,
-});
-
-const getShows = memoize(async (query: string) => {
-  const TraktTitles: ITraktSearch[] = await trakt.search.text({ query: query, type: "show" });
-  const ids: number[] = TraktTitles.map((Title: ITraktSearch) => Title.show!.ids.tvdb);
-
+//TRAKT + TVMAZE
+/* const getShows = memoize(async (query: string) => {
+  const TraktResult = await fetch(
+    `https://api.trakt.tv/search/show?query=${encodeURIComponent(query)}`,
+    {
+      headers: {
+        "trakt-api-key": process.env.TRAKT_CLIENT_ID!,
+        "trakt-api-version": "2",
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  const TraktResultJSON: Array<ITraktWrapper> = await TraktResult.json();
+  const ids: number[] = TraktResultJSON.map(
+    (Wrapper) => Wrapper.show!.ids.tvdb
+  );
+  const titles: Array<TVMazeShow> = await Promise.all(
+    ids.map((id) => fetch(`https://api.tvmaze.com/lookup/shows?thetvdb=${id}`))
+  ).then((shows) => Promise.all(shows.map((show) => show.json())));
+  return titles.filter((t) => t && t);
 }); */
 
 const getShows = memoize(async (query: string) => {

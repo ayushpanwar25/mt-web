@@ -22,7 +22,7 @@ export interface ITraktSearch {
   data: ITraktWrapper[];
 }
 
-interface ITraktWrapper {
+export interface ITraktWrapper {
   show?: ITraktTitle;
   movie?: ITraktTitle;
 }
